@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Matt</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="nav-wrap">
+    <nav class="container">
+      <a href="index.html" class="nav-logo">Matt.</a>
+      <ul class="nav-links">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Page Hero -->
+  <div class="page-hero container">
+    <p class="eyebrow">Get in touch</p>
+    <h1>Let's build<br /><em style="font-style:italic; color:var(--accent)">something great</em></h1>
+  </div>
+
+  <!-- Contact Body -->
+  <div class="contact-grid container">
+
+    <!-- Form -->
+    <div>
+      <form class="contact-form" action="#" method="POST">
+
+        <div class="form-row">
+          <div class="field">
+            <label for="name">Your name</label>
+            <input type="text" id="name" name="name" placeholder="Jane Smith" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" placeholder="jane@company.com" autocomplete="email" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="subject">Project type</label>
+          <select id="subject" name="subject">
+            <option value="" disabled selected>Select a category</option>
+            <option value="brand">Brand Identity</option>
+            <option value="product">Product / UX Design</option>
+            <option value="web">Web Design</option>
+            <option value="packaging">Packaging</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="budget">Estimated budget</label>
+          <select id="budget" name="budget">
+            <option value="" disabled selected>Select a range</option>
+            <option value="5k">Under $5,000</option>
+            <option value="10k">$5,000 – $10,000</option>
+            <option value="25k">$10,000 – $25,000</option>
+            <option value="25k+">$25,000+</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="message">Tell me about your project</label>
+          <textarea id="message" name="message" placeholder="What are you building? What's the goal? When do you need it?" required></textarea>
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-primary">Send message &nbsp;→</button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Info panel -->
+    <aside class="contact-info">
+      <p>I'm a designer who loves creative problems. Whether you're launching something new or evolving something established, I'd love to hear about it.</p>
+      <p>I typically respond within one business day.</p>
+
+      <ul class="contact-detail-list">
+        <li class="contact-detail-item">
+          <span class="detail-label">Email</span>
+          <a href="mailto:hello@matt.design" class="detail-value" style="transition:color 0.2s;">hello@matt.design</a>
+        </li>
+        <li class="contact-detail-item">
+          <span class="detail-label">Based in</span>
+          <span class="detail-value">United States &mdash; remote worldwide</span>
+        </li>
+        <li class="contact-detail-item">
+          <span class="detail-label">Availability</span>
+          <span class="detail-value">Open for Q2 2026 projects</span>
+        </li>
+        <li class="contact-detail-item">
+          <span class="detail-label">Dribbble</span>
+          <a href="https://dribbble.com" target="_blank" rel="noopener" class="detail-value" style="transition:color 0.2s;">dribbble.com/matt</a>
+        </li>
+        <li class="contact-detail-item">
+          <span class="detail-label">LinkedIn</span>
+          <a href="https://linkedin.com" target="_blank" rel="noopener" class="detail-value" style="transition:color 0.2s;">linkedin.com/in/matt</a>
+        </li>
+      </ul>
+    </aside>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <p class="footer-copy">&copy; 2026 Matt. All rights reserved.</p>
+      <ul class="footer-links">
+        <li><a href="https://dribbble.com" target="_blank" rel="noopener">Dribbble</a></li>
+        <li><a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://twitter.com" target="_blank" rel="noopener">Twitter</a></li>
+        <li><a href="mailto:hello@matt.design">Email</a></li>
+      </ul>
+    </div>
+  </footer>
+
+</body>
+</html>
