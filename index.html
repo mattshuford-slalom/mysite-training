@@ -78,6 +78,84 @@
       color: var(--fg-muted);
       letter-spacing: 0.04em;
     }
+    .weather-forecast-toggle {
+      margin-top: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.38rem 0.68rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--fg-muted);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.25s, color 0.25s, background 0.25s;
+    }
+    .weather-forecast-toggle:hover {
+      color: var(--fg);
+      border-color: var(--accent);
+    }
+    .weather-forecast-toggle.active {
+      color: var(--bg);
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+    .weather-forecast-toggle:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .weather-forecast {
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    .weather-forecast-list {
+      list-style: none;
+      display: grid;
+      gap: 0.38rem;
+    }
+    .weather-forecast-item {
+      display: grid;
+      grid-template-columns: 2.8rem 1fr auto;
+      align-items: center;
+      column-gap: 0.5rem;
+      font-size: 0.68rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.03em;
+    }
+    .weather-forecast-day {
+      font-weight: 500;
+      color: var(--fg);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.6rem;
+    }
+    .weather-forecast-main {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .weather-forecast-temps {
+      color: var(--fg);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    @media (max-width: 640px) {
+      .weather-widget {
+        right: 1rem;
+        left: 1rem;
+        bottom: 1rem;
+        min-width: 0;
+      }
+    }
     .weather-error {
       font-size: 0.72rem;
       color: var(--fg-muted);
@@ -277,6 +355,10 @@
       </div>
       <p class="weather-desc" id="weather-desc"></p>
       <p class="weather-loc" id="weather-loc"></p>
+      <button id="weather-forecast-toggle" class="weather-forecast-toggle" type="button" aria-expanded="false" disabled>5-day forecast</button>
+      <div id="weather-forecast" class="weather-forecast" style="display:none">
+        <ul id="weather-forecast-list" class="weather-forecast-list"></ul>
+      </div>
     </div>
     <div id="weather-error" style="display:none" class="weather-error">📍 Location unavailable</div>
   </div>
@@ -310,14 +392,60 @@
         99: { emoji: '\u26C8\uFE0F',  desc: 'Severe storm' }
       };
 
+      var forecastOpen = false;
+      var loadingEl = document.getElementById('weather-loading');
+      var contentEl = document.getElementById('weather-content');
+      var errorEl = document.getElementById('weather-error');
+      var forecastToggleEl = document.getElementById('weather-forecast-toggle');
+      var forecastWrapEl = document.getElementById('weather-forecast');
+      var forecastListEl = document.getElementById('weather-forecast-list');
+
       function show(id) { document.getElementById(id).style.display = ''; }
       function hide(id) { document.getElementById(id).style.display = 'none'; }
 
+      function setForecastOpen(open) {
+        forecastOpen = !!open;
+        forecastWrapEl.style.display = forecastOpen ? '' : 'none';
+        forecastToggleEl.classList.toggle('active', forecastOpen);
+        forecastToggleEl.setAttribute('aria-expanded', String(forecastOpen));
+      }
+
+      function dayName(isoDate) {
+        var d = new Date(isoDate + 'T12:00:00');
+        return d.toLocaleDateString('en-US', { weekday: 'short' });
+      }
+
+      function renderForecast(daily) {
+        var times = daily.time || [];
+        var maxes = daily.temperature_2m_max || [];
+        var mins = daily.temperature_2m_min || [];
+        var codes = daily.weather_code || [];
+        var rows = [];
+        var i;
+
+        for (i = 1; i <= 5; i += 1) {
+          if (!times[i]) break;
+          rows.push(
+            '<li class="weather-forecast-item">' +
+              '<span class="weather-forecast-day">' + dayName(times[i]) + '</span>' +
+              '<span class="weather-forecast-main">' +
+                '<span>' + ((WMO[codes[i]] && WMO[codes[i]].emoji) || '\uD83C\uDF21\uFE0F') + '</span>' +
+                '<span>' + ((WMO[codes[i]] && WMO[codes[i]].desc) || 'Weather') + '</span>' +
+              '</span>' +
+              '<span class="weather-forecast-temps">' + Math.round(maxes[i]) + '\u00B0 / ' + Math.round(mins[i]) + '\u00B0</span>' +
+            '</li>'
+          );
+        }
+
+        forecastListEl.innerHTML = rows.join('');
+        forecastToggleEl.disabled = rows.length === 0;
+      }
+
       function onError(message) {
-        var errorEl = document.getElementById('weather-error');
         errorEl.textContent = message || '📍 Location unavailable';
         hide('weather-loading');
         hide('weather-content');
+        setForecastOpen(false);
         show('weather-error');
       }
 
@@ -330,10 +458,17 @@
       }
 
       function fetchWeather(lat, lon) {
+        loadingEl.innerHTML = '<span class="weather-spinner"></span>Loading weather…';
+        forecastToggleEl.disabled = true;
+        forecastListEl.innerHTML = '';
+        setForecastOpen(false);
+
         fetch(
           'https://api.open-meteo.com/v1/forecast' +
           '?latitude=' + lat + '&longitude=' + lon +
           '&current=temperature_2m,weather_code' +
+          '&daily=weather_code,temperature_2m_max,temperature_2m_min' +
+          '&forecast_days=6' +
           '&temperature_unit=fahrenheit&timezone=auto'
         )
           .then(function (res) {
@@ -352,6 +487,7 @@
             document.getElementById('weather-temp').textContent  = temp;
             document.getElementById('weather-desc').textContent  = cond.desc;
             document.getElementById('weather-loc').textContent   = tz;
+            renderForecast(data.daily || {});
 
             hide('weather-loading');
             show('weather-content');
@@ -359,6 +495,11 @@
           })
           .catch(function () { onError(); });
       }
+
+      forecastToggleEl.addEventListener('click', function () {
+        if (forecastToggleEl.disabled) return;
+        setForecastOpen(!forecastOpen);
+      });
 
       if (!navigator.geolocation) {
         onError('📍 Enable location to see your weather.');
