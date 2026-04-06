@@ -5,6 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matt — Designer</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Weather Widget ───────────────────────────────────────── */
+    .weather-widget {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 50;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      min-width: 172px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+      transition: border-color 0.3s;
+    }
+    .weather-widget:hover { border-color: var(--accent); }
+
+    .weather-loading {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+
+    .weather-spinner {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: w-spin 0.75s linear infinite;
+    }
+    @keyframes w-spin { to { transform: rotate(360deg); } }
+
+    .weather-top {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.45rem;
+    }
+    .weather-emoji { font-size: 2.2rem; line-height: 1; }
+
+    .weather-temp {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--fg);
+      line-height: 1;
+    }
+    .weather-unit {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--fg-muted);
+      vertical-align: super;
+      margin-left: 1px;
+    }
+    .weather-desc {
+      font-size: 0.67rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .weather-loc {
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+    }
+    .weather-error {
+      font-size: 0.72rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+    }
+  </style>
 </head>
 <body>
 
@@ -183,6 +262,128 @@
       </ul>
     </div>
   </footer>
+
+  <!-- Weather Widget -->
+  <div class="weather-widget" id="weather-widget" aria-label="Current weather">
+    <div id="weather-loading" class="weather-loading">
+      <span class="weather-spinner"></span>Locating…
+    </div>
+    <div id="weather-content" style="display:none">
+      <div class="weather-top">
+        <span class="weather-emoji" id="weather-emoji"></span>
+        <div>
+          <span class="weather-temp" id="weather-temp"></span><span class="weather-unit">°F</span>
+        </div>
+      </div>
+      <p class="weather-desc" id="weather-desc"></p>
+      <p class="weather-loc" id="weather-loc"></p>
+    </div>
+    <div id="weather-error" style="display:none" class="weather-error">📍 Location unavailable</div>
+  </div>
+
+  <script>
+    (function () {
+      var WMO = {
+        0:  { emoji: '\u2600\uFE0F',  desc: 'Clear' },
+        1:  { emoji: '\uD83C\uDF24\uFE0F', desc: 'Mainly clear' },
+        2:  { emoji: '\u26C5',  desc: 'Partly cloudy' },
+        3:  { emoji: '\u2601\uFE0F',  desc: 'Overcast' },
+        45: { emoji: '\uD83C\uDF2B\uFE0F', desc: 'Foggy' },
+        48: { emoji: '\uD83C\uDF2B\uFE0F', desc: 'Icy fog' },
+        51: { emoji: '\uD83C\uDF26\uFE0F', desc: 'Light drizzle' },
+        53: { emoji: '\uD83C\uDF26\uFE0F', desc: 'Drizzle' },
+        55: { emoji: '\uD83C\uDF26\uFE0F', desc: 'Drizzle' },
+        61: { emoji: '\uD83C\uDF27\uFE0F', desc: 'Light rain' },
+        63: { emoji: '\uD83C\uDF27\uFE0F', desc: 'Rain' },
+        65: { emoji: '\uD83C\uDF27\uFE0F', desc: 'Heavy rain' },
+        71: { emoji: '\uD83C\uDF28\uFE0F', desc: 'Light snow' },
+        73: { emoji: '\uD83C\uDF28\uFE0F', desc: 'Snowfall' },
+        75: { emoji: '\u2744\uFE0F',  desc: 'Heavy snow' },
+        77: { emoji: '\uD83C\uDF28\uFE0F', desc: 'Snow grains' },
+        80: { emoji: '\uD83C\uDF27\uFE0F', desc: 'Showers' },
+        81: { emoji: '\uD83C\uDF27\uFE0F', desc: 'Heavy showers' },
+        82: { emoji: '\u26C8\uFE0F',  desc: 'Violent showers' },
+        85: { emoji: '\uD83C\uDF28\uFE0F', desc: 'Snow showers' },
+        86: { emoji: '\uD83C\uDF28\uFE0F', desc: 'Heavy snow showers' },
+        95: { emoji: '\u26C8\uFE0F',  desc: 'Thunderstorm' },
+        96: { emoji: '\u26C8\uFE0F',  desc: 'Thunderstorm' },
+        99: { emoji: '\u26C8\uFE0F',  desc: 'Severe storm' }
+      };
+
+      function show(id) { document.getElementById(id).style.display = ''; }
+      function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+      function onError(message) {
+        var errorEl = document.getElementById('weather-error');
+        errorEl.textContent = message || '📍 Location unavailable';
+        hide('weather-loading');
+        hide('weather-content');
+        show('weather-error');
+      }
+
+      function isPermissionDenied(err) {
+        if (!err) return false;
+        var code = err.code;
+        var deniedCode = err.PERMISSION_DENIED;
+        var msg = (err.message || '').toLowerCase();
+        return code === 1 || code === deniedCode || /denied|permission/.test(msg);
+      }
+
+      function fetchWeather(lat, lon) {
+        fetch(
+          'https://api.open-meteo.com/v1/forecast' +
+          '?latitude=' + lat + '&longitude=' + lon +
+          '&current=temperature_2m,weather_code' +
+          '&temperature_unit=fahrenheit&timezone=auto'
+        )
+          .then(function (res) {
+            if (!res.ok) throw new Error('bad response');
+            return res.json();
+          })
+          .then(function (data) {
+            if (!data || !data.current) throw new Error('missing weather payload');
+
+            var temp = Math.round(data.current.temperature_2m);
+            var code = data.current.weather_code;
+            var cond = WMO[code] || { emoji: '\uD83C\uDF21\uFE0F', desc: 'Unknown' };
+            var tz   = (data.timezone || '').split('/').pop().replace(/_/g, ' ');
+
+            document.getElementById('weather-emoji').textContent = cond.emoji;
+            document.getElementById('weather-temp').textContent  = temp;
+            document.getElementById('weather-desc').textContent  = cond.desc;
+            document.getElementById('weather-loc').textContent   = tz;
+
+            hide('weather-loading');
+            show('weather-content');
+            hide('weather-error');
+          })
+          .catch(function () { onError(); });
+      }
+
+      if (!navigator.geolocation) {
+        onError('📍 Enable location to see your weather.');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { fetchWeather(pos.coords.latitude, pos.coords.longitude); },
+        function (err) {
+          if (isPermissionDenied(err)) {
+            onError('📍 Enable location to see your weather.');
+            return;
+          }
+
+          if (err && err.code === 3) {
+            onError('📍 Location timed out. Please refresh to try again.');
+            return;
+          }
+
+          onError();
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+      );
+    }());
+  </script>
 
 </body>
 </html>
