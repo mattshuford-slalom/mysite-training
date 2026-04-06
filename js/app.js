@@ -28,10 +28,19 @@
 
   var forecastOpen = false;
   var loadingEl = document.getElementById('weather-loading');
+  var contentEl = document.getElementById('weather-content');
   var errorEl = document.getElementById('weather-error');
+  var emojiEl = document.getElementById('weather-emoji');
+  var tempEl = document.getElementById('weather-temp');
+  var descEl = document.getElementById('weather-desc');
+  var locEl = document.getElementById('weather-loc');
   var forecastToggleEl = document.getElementById('weather-forecast-toggle');
   var forecastWrapEl = document.getElementById('weather-forecast');
   var forecastListEl = document.getElementById('weather-forecast-list');
+
+  if (!loadingEl || !contentEl || !errorEl || !emojiEl || !tempEl || !descEl || !locEl || !forecastToggleEl || !forecastWrapEl || !forecastListEl) {
+    return;
+  }
 
   function show(id) { document.getElementById(id).style.display = ''; }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
@@ -92,6 +101,8 @@
 
   function fetchWeather(lat, lon) {
     loadingEl.innerHTML = '<span class="weather-spinner"></span>Loading weather\u2026';
+    show('weather-loading');
+    hide('weather-error');
     forecastToggleEl.disabled = true;
     forecastListEl.innerHTML = '';
     setForecastOpen(false);
@@ -116,10 +127,10 @@
         var cond = WMO[code] || { emoji: '\uD83C\uDF21\uFE0F', desc: 'Unknown' };
         var tz = (data.timezone || '').split('/').pop().replace(/_/g, ' ');
 
-        document.getElementById('weather-emoji').textContent = cond.emoji;
-        document.getElementById('weather-temp').textContent = temp;
-        document.getElementById('weather-desc').textContent = cond.desc;
-        document.getElementById('weather-loc').textContent = tz;
+        emojiEl.textContent = cond.emoji;
+        tempEl.textContent = temp;
+        descEl.textContent = cond.desc;
+        locEl.textContent = tz;
         renderForecast(data.daily || {});
 
         hide('weather-loading');
@@ -127,6 +138,43 @@
         hide('weather-error');
       })
       .catch(function () { onError(); });
+  }
+
+  function requestLocation(options, onFailure) {
+    navigator.geolocation.getCurrentPosition(
+      function (pos) { fetchWeather(pos.coords.latitude, pos.coords.longitude); },
+      onFailure,
+      options
+    );
+  }
+
+  function handleLocationError(err) {
+    if (isPermissionDenied(err)) {
+      onError('\uD83D\uDCCD Enable location to see your weather.');
+      return;
+    }
+
+    if (err && err.code === 3) {
+      requestLocation(
+        { enableHighAccuracy: true, timeout: 45000, maximumAge: 0 },
+        function (retryErr) {
+          if (isPermissionDenied(retryErr)) {
+            onError('\uD83D\uDCCD Enable location to see your weather.');
+            return;
+          }
+
+          if (retryErr && retryErr.code === 3) {
+            onError('\uD83D\uDCCD Location is taking too long. Check browser and macOS location access, then refresh.');
+            return;
+          }
+
+          onError();
+        }
+      );
+      return;
+    }
+
+    onError();
   }
 
   forecastToggleEl.addEventListener('click', function () {
@@ -139,21 +187,8 @@
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(
-    function (pos) { fetchWeather(pos.coords.latitude, pos.coords.longitude); },
-    function (err) {
-      if (isPermissionDenied(err)) {
-        onError('\uD83D\uDCCD Enable location to see your weather.');
-        return;
-      }
-
-      if (err && err.code === 3) {
-        onError('\uD83D\uDCCD Location timed out. Please refresh to try again.');
-        return;
-      }
-
-      onError();
-    },
-    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+  requestLocation(
+    { enableHighAccuracy: false, timeout: 20000, maximumAge: 1800000 },
+    handleLocationError
   );
 }());
