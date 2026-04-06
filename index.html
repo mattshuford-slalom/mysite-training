@@ -11,7 +11,7 @@
   <!-- Navigation -->
   <div class="nav-wrap">
     <nav class="container">
-      <a href="index.html" class="nav-logo">Matt.</a>
+      <a href="index.html" class="nav-logo">Matt Shuford</a>
       <ul class="nav-links">
         <li><a href="pages/work.html">Work</a></li>
         <li><a href="pages/about.html">About</a></li>
@@ -23,13 +23,22 @@
   <!-- Hero -->
   <section class="hero">
     <div class="hero-inner">
-      <div class="hero-meta">
-        <span class="eyebrow">Designer &amp; Creative</span>
-        <span class="line"></span>
+      <div class="hero-content">
+        <div class="hero-meta">
+          <span class="eyebrow">Designer &amp; Creative</span>
+          <span class="line"></span>
+        </div>
+        <h1 class="display">Crafting<br /><em style="font-style:italic; color:var(--accent)">beautiful</em><br />digital things.</h1>
+        <p class="hero-sub">I design thoughtful experiences — from brand identities to digital products — with a focus on clarity, craft, and intention.</p>
+        <a href="pages/work.html" class="hero-scroll">View my work</a>
       </div>
-      <h1 class="display">Crafting<br /><em style="font-style:italic; color:var(--accent)">beautiful</em><br />digital things.</h1>
-      <p class="hero-sub">I design thoughtful experiences — from brand identities to digital products — with a focus on clarity, craft, and intention.</p>
-      <a href="pages/work.html" class="hero-scroll">View my work</a>
+      <div class="about-photo-wrap hero-photo">
+        <div class="photo-placeholder">
+          <img src="Screen%20Shot%202022-02-01%20at%2012.26.31%20PM%20copy.png" alt="Portrait of Matt Shuford" class="profile-photo" />
+          <div class="reveal-grid" id="reveal-grid"></div>
+        </div>
+        <div class="photo-accent"></div>
+      </div>
     </div>
   </section>
 
@@ -112,14 +121,6 @@
   <section>
     <div class="container">
       <div class="about-strip">
-
-        <div class="about-photo-wrap">
-          <div class="photo-placeholder">
-            <div class="ph-bg"></div>
-            <span class="ph-initials">M.</span>
-          </div>
-          <div class="photo-accent"></div>
-        </div>
 
         <div class="about-content">
           <p class="eyebrow">About me</p>
@@ -205,6 +206,43 @@
     </div>
     <div id="weather-error" style="display:none" class="weather-error">📍 Location unavailable</div>
   </div>
+
+  <script>
+    (function() {
+      const container = document.getElementById('reveal-grid');
+      if (!container) return;
+
+      const gridSize = 14; // 14x14 grid of reveal blocks (~3x the original)
+      const animationDuration = 4; // 4 seconds total
+      const totalDiagonals = (gridSize - 1) * 2; // 0 to 26
+      const blockDuration = 0.35; // how long each block takes to fade
+      const stagger = animationDuration / totalDiagonals; // delay between diagonals
+
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+          const block = document.createElement('div');
+          block.className = 'reveal-block';
+          
+          const blockSize = 100 / gridSize;
+          block.style.width = blockSize + '%';
+          block.style.height = blockSize + '%';
+          block.style.left = (col * blockSize) + '%';
+          block.style.top = (row * blockSize) + '%';
+          
+          // Diagonal sweep: all blocks on same diagonal (row+col) reveal together
+          const diagonalIndex = row + col;
+          const delay = diagonalIndex * stagger;
+          
+          block.style.animationName = 'revealBlock';
+          block.style.animationDuration = blockDuration + 's';
+          block.style.animationDelay = delay + 's';
+          block.style.animationFillMode = 'forwards';
+          
+          container.appendChild(block);
+        }
+      }
+    })();
+  </script>
 
   <script src="js/app.js" defer></script>
 

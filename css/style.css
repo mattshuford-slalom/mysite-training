@@ -90,7 +90,9 @@ nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+  height: 5.5rem;
+  background: #000;
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-logo {
@@ -133,6 +135,22 @@ nav {
   margin: 0 auto;
   padding: 0 2rem;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.hero-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-photo {
+  flex-shrink: 0;
+}
+
+.hero-photo .photo-placeholder {
+  max-width: 364px;
 }
 
 .hero-meta {
@@ -180,6 +198,35 @@ nav {
 
 .hero-scroll:hover { color: var(--accent); }
 .hero-scroll:hover::after { width: 5rem; }
+
+/* ── Image Reveal Animation ──────────────────────────────────── */
+@keyframes revealBlock {
+  0% {
+    background: #000;
+    opacity: 1;
+  }
+  100% {
+    background: #000;
+    opacity: 0;
+  }
+}
+
+.reveal-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  overflow: hidden;
+}
+
+.reveal-block {
+  position: absolute;
+  background: #000;
+}
 
 /* ── Buttons ────────────────────────────────────────────────── */
 .btn {
@@ -334,7 +381,7 @@ nav {
 /* ── About strip ────────────────────────────────────────────── */
 .about-strip {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 5rem;
   align-items: center;
 }
@@ -345,11 +392,11 @@ nav {
 
 .photo-placeholder {
   width: 100%;
-  aspect-ratio: 3/4;
-  max-width: 380px;
+  aspect-ratio: 1 / 1;
+  max-width: 360px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,19 +404,13 @@ nav {
   position: relative;
 }
 
-.photo-placeholder .ph-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(160deg, #1a1410 0%, #2a1f15 60%, var(--bg) 100%);
-}
-
-.photo-placeholder .ph-initials {
-  position: relative;
-  font-family: var(--font-display);
-  font-size: 7rem;
-  color: rgba(200,149,106,0.18);
-  font-style: italic;
-  letter-spacing: -0.03em;
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  border-radius: 50%;
+  display: block;
 }
 
 .photo-accent {
@@ -729,6 +770,11 @@ footer {
   .work-card.tall  { grid-column: span 12; }
   .work-card.half  { grid-column: span 12; }
 
+  .hero-inner { flex-direction: column; gap: 2rem; align-items: center; }
+  .hero-content { text-align: center; }
+  .hero-photo { width: 100%; }
+  .hero-photo .photo-placeholder { max-width: 250px; }
+
   .about-strip { grid-template-columns: 1fr; gap: 3rem; }
   .photo-placeholder { max-width: 280px; }
   .photo-accent { display: none; }
@@ -748,7 +794,10 @@ footer {
 @media (max-width: 600px) {
   nav { padding: 1.2rem 1.2rem; }
   .container { padding: 0 1.2rem; }
-  .hero-inner { padding: 0 1.2rem; }
+  .hero-inner { padding: 0 1.2rem; flex-direction: column; gap: 2rem; align-items: center; }
+  .hero-content { text-align: center; }
+  .hero-photo { width: 100%; }
+  .hero-photo .photo-placeholder { max-width: 220px; }
   section { padding: 4rem 0; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
   .stats { grid-template-columns: 1fr; }
